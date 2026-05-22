@@ -1,0 +1,25 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node index.js"
+
+[nixpacks]
+nodejsVersion = "18"
+packages = [
+  "chromium",
+  "nss",
+  "atk",
+  "atkmm",
+  "cairo",
+  "cairo-gobject",
+  "cups",
+  "dbus",
+  "gdk-pixbuf",
+  "glib",
+  "gtk3",
+  "libdrm",
+  "libxkbcommon",
+  "pango",
+  "pciutils"
+]
