@@ -42,4 +42,4 @@ async function createBrowserSession() {
     return { browser, context, page, sessionData };
 }
 
-module.exports = { createBrowserSession };
+module.exports = createBrowserSession;

@@ -4,22 +4,22 @@ process.on("exit", code => {
 let LINK = '';
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ port: 8080 });
-const { createBrowserSession } = require('./browserfiles/server.js');
+const createBrowserSession = require('./browserfiles/server.js');
 const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', '9jpo7', '3esa8', '32ma9', '8wda10', '1jaa11', '24ch12', '3gal13', '7eaa14', '8lro15', '6#an16', '0ke157', '3msi18', '4sea19', 'd1ax20'];
 
 
 
 wss.on("connection", ws => {
   console.log("Client connected");
-   const session = createBrowserSession();
+   const session = await createBrowserSession();
    const page = session.page;
     ws.on("message", message => {
         const data = JSON.parse(message);
         if (data.type === "navlink"){
             LINK = data.link;
             console.log("Received link:", LINK);
-            page.goto(data.link);
-            const domTree = page.evaluate(() => {
+            await page.goto(data.link);
+            const domTree = await page.evaluate(() => {
                 function serialize(node) {
                      return {
                         tag: node.nodeType === 1 ? node.tagName : null,
@@ -35,7 +35,7 @@ wss.on("connection", ws => {
             });
             ws.send(JSON.stringify({
                 type: "loaded",
-                title: page.title(),
+                title: await page.title(),
                 dom: domTree
             }));
         }
@@ -50,7 +50,7 @@ wss.on("connection", ws => {
             page.keyboard.press(data.key);
         }
         if (data.inputType === "input") {
-            page.evaluate(({path, value}) => {
+            await page.evaluate(({path, value}) => {
                 let node = document.body;
                 for (const index of path) {
                   node = node.childNodes[index];
@@ -60,7 +60,7 @@ wss.on("connection", ws => {
             }, data);
         }
         if(data.inputType === "scroll"){
-            page.evaluate(({x, y}) => {
+            await page.evaluate(({x, y}) => {
                 window.scrollTo(x, y);
             }, data);
         }
