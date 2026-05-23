@@ -19,7 +19,7 @@ wss.on("connection", ws => {
             LINK = data.link;
             console.log("Received link:", LINK);
             page.goto(data.link);
-            const domTree = await page.evaluate(() => {
+            const domTree = page.evaluate(() => {
                 function serialize(node) {
                      return {
                         tag: node.nodeType === 1 ? node.tagName : null,
@@ -50,7 +50,7 @@ wss.on("connection", ws => {
             page.keyboard.press(data.key);
         }
         if (data.inputType === "input") {
-            await page.evaluate(({path, value}) => {
+            page.evaluate(({path, value}) => {
                 let node = document.body;
                 for (const index of path) {
                   node = node.childNodes[index];
@@ -60,7 +60,7 @@ wss.on("connection", ws => {
             }, data);
         }
         if(data.inputType === "scroll"){
-            await page.evaluate(({x, y}) => {
+            page.evaluate(({x, y}) => {
                 window.scrollTo(x, y);
             }, data);
         }
