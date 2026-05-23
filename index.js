@@ -35,7 +35,7 @@ wss.on("connection", ws => {
             });
             ws.send(JSON.stringify({
                 type: "loaded",
-                title: await page.title(),
+                title: page.title(),
                 dom: domTree
             }));
         }
