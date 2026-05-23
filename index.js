@@ -4,14 +4,14 @@ process.on("exit", code => {
 let LINK = '';
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ port: 8080 });
-const { async createBrowserSession } = require('./browserfiles/server.js');
+const { createBrowserSession } = require('./browserfiles/server.js');
 const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', '9jpo7', '3esa8', '32ma9', '8wda10', '1jaa11', '24ch12', '3gal13', '7eaa14', '8lro15', '6#an16', '0ke157', '3msi18', '4sea19', 'd1ax20'];
 
 
 
 wss.on("connection", ws => {
   console.log("Client connected");
-   const session = await createBrowserSession();
+   const session = createBrowserSession();
    const page = session.page;
     ws.on("message", message => {
         const data = JSON.parse(message);
