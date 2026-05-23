@@ -18,7 +18,7 @@ wss.on("connection", ws => {
         if (data.type === "navlink"){
             LINK = data.link;
             console.log("Received link:", LINK);
-            await page.goto(data.link);
+            page.goto(data.link);
             const domTree = await page.evaluate(() => {
                 function serialize(node) {
                      return {
