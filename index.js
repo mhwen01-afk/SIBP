@@ -13,12 +13,13 @@ async function getSessionAndPage(){
    return {session, page};
 }
 
-wss.on("connection", ws => {
+wss.on("connection",  async (ws)   =>  {
   console.log("Client connected");
    
-    ws.on("message", message => {
+    ws.on("message", async (message) => {
         const data = JSON.parse(message);
         if (data.type === "navlink"){
+            let Obj = await getSessionAndPage();
             LINK = data.link;
             console.log("Received link:", LINK);
             await page.goto(data.link);
