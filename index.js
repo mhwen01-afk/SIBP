@@ -47,9 +47,11 @@ wss.on("connection",  async (socket)   =>  {
             const base64 = buffer.toString('base64');
             socket.send(JSON.stringify({ type: "frame", data: base64 }));
         } catch (e) {
-            clearInterval(frameInterval); // ← stop the interval if screenshot fails
+            console.log("Error capturing/sending frame: ", e);
+            //clearInterval(frameInterval);
+            
         } finally {
-           capturing = false; // ← use finally so capturing always resets
+           capturing = false;
         }
     }, 18);
 
