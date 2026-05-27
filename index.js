@@ -43,7 +43,13 @@ wss.on("connection",  async (socket)   =>  {
     if (capturing) return;
         capturing = true;
         try {
-            const buffer = await page.screenshot({ type: "jpeg", quality: 80 });
+            const buffer = await page.screenshot({ 
+                type: "jpeg",
+                quality: 100,
+                fullPage: false,
+                clip: { x: 0, y: 0, width: 1280, height: 720 }
+                });
+            console.log("buffer size:", buffer.length);
             const base64 = buffer.toString('base64');
             socket.send(JSON.stringify({ type: "frame", data: base64 }));
         } catch (e) {
