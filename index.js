@@ -70,11 +70,15 @@ wss.on("connection",  async (socket)   =>  {
 
         }
         if(data.inputType === "click"){
-            page.mouse.click(data.x, data.y);
+            await page.mouse.click(data.x, data.y);
+            await page.evaluate(({x,y}) => {
+                const element = document.elementFromPoint(x, y);
+                element.click();
+            }, data);
             console.log("Mouse click at: ", data.x, ", ", data.y);
         }
         if(data.inputType === "keydown"){
-            page.keyboard.press(data.key);
+            await page.keyboard.press(data.key);
             console.log("Key down: ", data.key);
         }
        
@@ -84,7 +88,7 @@ wss.on("connection",  async (socket)   =>  {
             }, data);
         }
         if(data.inputType === "keyup"){
-            page.keyboard.up(data.key);
+            await page.keyboard.up(data.key);
             console.log("Key up: ", data.key);
         }
     };
