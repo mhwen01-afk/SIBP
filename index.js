@@ -35,7 +35,7 @@ wss.on("connection",  async (socket)   =>  {
         if (capturing) return;
         capturing = true;
         const screenshot = await page.screenshot({ encoding: "base64", type: "jpeg", quality: 60 });
-        socket.send(JSON.stringify({ type: "frame", data: screenshot }));
+        socket.send(JSON.stringify({ type: "frame", data: screenshot.toString() })); // ← .toString()
         capturing = false;
     }, 18);
     
