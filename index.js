@@ -43,6 +43,7 @@ wss.on("connection",  async (socket)   =>  {
     if (capturing) return;
         capturing = true;
         try {
+            await page.waitForTimeout(16);
             const buffer = await page.screenshot({ 
                 type: "jpeg",
                 quality: 100,
