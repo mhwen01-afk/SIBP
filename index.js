@@ -123,7 +123,7 @@ wss.on("connection",  async (socket)   =>  {
                         ? Object.fromEntries([...node.attributes].map(a => [a.name, a.value]))
                         : {},
                          text: node.nodeType === 3 ? node.textContent : null,
-                        children: [...node.childNodes].map(serialize)
+                        children: [...node.childNodes].map(serialize).filter(Boolean)
                     };
                 }
 
