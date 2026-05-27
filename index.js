@@ -29,7 +29,7 @@ wss.on("connection",  async (socket)   =>  {
     const page = session.page;
     console.log("Page obtained from session");
 
-
+    await page.setViewport({ width: 1280, height: 720 });
     
     
 
