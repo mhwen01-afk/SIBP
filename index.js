@@ -30,87 +30,15 @@ wss.on("connection",  async (socket)   =>  {
     console.log("Page obtained from session");
 
 
-    let navTimer = null;
-    page.on("framenavigated", async frame => {
-        if (frame !== page.mainFrame()) return;
-
-        clearTimeout(navTimer);
-        navTimer = setTimeout(async()=>{
-
-        
-        if (frame === page.mainFrame()) {
-            const url = frame.url();
-        
-            // Send updated title + DOM after redirect
-            socket.send(JSON.stringify({
-              type: "loadednewpage",
-              title: await page.title(),
-              url: url
-            }));
-
-        const domTree = await page.evaluate(() => {
-            const BASE = location.origin;
-
-            function toAbsolute(url) {
-                if (!url) return url;
-                try { return new URL(url, BASE).href; }
-                catch { return url; }
-            }
-
-            const URL_ATTRS = { src: true, href: true, action: true, srcset: true };
-
-            function serialize(node) {
-                if (node.nodeType === 3) {
-                    return { type: "text", text: node.textContent };
-                }
-                if (node.nodeType !== 1) return null;
-
-                const tag = node.tagName.toLowerCase();
-
-                // Skip script tags — they won't run right on the client anyway
-                if (tag === "script") return null;
-
-                const attrs = {};
-                for (const { name, value } of node.attributes) {
-                    attrs[name] = URL_ATTRS[name] ? toAbsolute(value) : value;
-                }
-
-                // Inline external stylesheets as <style> blocks so CSS actually loads
-                if (tag === "link" && attrs.rel === "stylesheet") {
-                    try {
-                        const sheet = [...document.styleSheets].find(s => s.href === attrs.href);
-                        if (sheet) {
-                            const css = [...sheet.cssRules].map(r => r.cssText).join("\n");
-                            return { type: "element", tag: "style", attrs: {}, children: [
-                                { type: "text", text: css }
-                            ]};
-                        }
-                    } catch {}
-                }
-
-                const children = [...node.childNodes]
-                    .map(serialize)
-                    .filter(Boolean);
-
-                return { type: "element", tag, attrs, children };
-            }
-
-            return {
-                head: serialize(document.head),
-                body: serialize(document.body)
-            };
-        });
-
-    socket.send(JSON.stringify({
-      type: "loaded",
-        title: await page.title(),
-        body: domTree.body,
-        head: domTree.head
-    }));
+    let capturing = false;
+    const frameInterval = setInterval(async () => {
+        if (capturing) return;
+        capturing = true;
+        const screenshot = await page.screenshot({ encoding: "base64", type: "jpeg", quality: 60 });
+        socket.send(JSON.stringify({ type: "frame", data: screenshot }));
+        capturing = false;
+    }, 18);
     
-  }
-  },100);
-});
 
     for (const msg of messageQueue) {
         await HandleMessage(msg);
@@ -127,28 +55,7 @@ wss.on("connection",  async (socket)   =>  {
             console.log("Received link:", LINK);
             await page.goto(data.link);
             console.log("Page loaded");
-            const domTree = await page.evaluate(() => {
-                function serialize(node) {
-                     return {
-                        tag: node.nodeType === 1 ? node.tagName : null,
-                        attrs: node.nodeType === 1
-                        ? Object.fromEntries([...node.attributes].map(a => [a.name, a.value]))
-                        : {},
-                         text: node.nodeType === 3 ? node.textContent : null,
-                        children: [...node.childNodes].map(serialize).filter(Boolean)
-                    };
-                }
-
-                return serialize(document.body);
-            });
-            console.log("DOM tree serialized");
-            socket.send(JSON.stringify({
-                type: "loaded",
-                title: await page.title(),
-                body: domTree.body,
-                head: domTree.head
-            }));
-            console.log("DOM tree sent to client");
+            
         }
         if(data.type === "login"){
             const entercode = data.code;
@@ -160,16 +67,7 @@ wss.on("connection",  async (socket)   =>  {
         if(data.inputType === "keydown"){
             page.keyboard.press(data.key);
         }
-        if (data.inputType === "input") {
-            await page.evaluate(({path, value}) => {
-                let node = document.body;
-                for (const index of path) {
-                  node = node.childNodes[index];
-                }
-                node.value = value;
-                node.dispatchEvent(new Event("input", { bubbles: true }));
-            }, data);
-        }
+       
         if(data.inputType === "scroll"){
             await page.evaluate(({x, y}) => {
                 window.scrollTo(x, y);
@@ -179,4 +77,8 @@ wss.on("connection",  async (socket)   =>  {
             page.keyboard.up(data.key);
         }
     };
+    socket.on("close", () => {
+        clearInterval(frameInterval);
+        session.browser.close();
+    });
 });
