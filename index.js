@@ -35,7 +35,7 @@ wss.on("connection",  async (socket)   =>  {
 
     // Send updated title + DOM after redirect
             socket.send(JSON.stringify({
-              type: "loaded",
+              type: "loadednewpage",
               title: await page.title(),
               url: url
             }));
@@ -94,8 +94,10 @@ wss.on("connection",  async (socket)   =>  {
         });
 
     socket.send(JSON.stringify({
-      type: "dom-full",
-      tree: domTree
+      type: "loaded",
+        title: await page.title(),
+        body: domTree.body,
+        head: domTree.head
     }));
   }
 });
