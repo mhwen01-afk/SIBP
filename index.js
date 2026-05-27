@@ -30,6 +30,15 @@ wss.on("connection",  async (socket)   =>  {
     console.log("Page obtained from session");
 
 
+    
+    
+
+    for (const msg of messageQueue) {
+        await HandleMessage(msg);
+    }
+    socket.off("message", bufferMessage);
+    socket.on("message", HandleMessage); 
+    
     let capturing = false;
     const frameInterval = setInterval(async () => {
         if (capturing) return;
@@ -38,14 +47,7 @@ wss.on("connection",  async (socket)   =>  {
         socket.send(JSON.stringify({ type: "frame", data: screenshot.toString() })); // ← .toString()
         capturing = false;
     }, 18);
-    
 
-    for (const msg of messageQueue) {
-        await HandleMessage(msg);
-    }
-    socket.off("message", bufferMessage);
-    socket.on("message", HandleMessage); 
-        
     async function HandleMessage(message){
         console.log("Message From Client");
         const data = JSON.parse(message);
