@@ -41,15 +41,21 @@ wss.on("connection",  async (socket)   =>  {
     
     let capturing = false;
     const frameInterval = setInterval(async () => {
-        if (capturing) return;
+    if (capturing) return;
         capturing = true;
-        const screenshot = await page.screenshot({ encoding: "base64", type: "jpeg", quality: 60 });
-        socket.send(JSON.stringify({ type: "frame", data: screenshot.toString('base64') })); // ← .toString()
-        capturing = false;
+        try {
+            const buffer = await page.screenshot({ type: "jpeg", quality: 80 });
+            const base64 = buffer.toString('base64');
+            socket.send(JSON.stringify({ type: "frame", data: base64 }));
+        } catch (e) {
+            clearInterval(frameInterval); // ← stop the interval if screenshot fails
+        } finally {
+           capturing = false; // ← use finally so capturing always resets
+        }
     }, 18);
 
     async function HandleMessage(message){
-        console.log("Message From Client");
+        console.log("Message From Client. Type: ", message.type.toString());
         const data = JSON.parse(message);
         if (data.type === "navlink"){
             console.log("Navigating to link: ", data.link);
@@ -65,9 +71,11 @@ wss.on("connection",  async (socket)   =>  {
         }
         if(data.inputType === "click"){
             page.mouse.click(data.x, data.y);
+            console.log("Mouse click at: ", data.x, ", ", data.y);
         }
         if(data.inputType === "keydown"){
             page.keyboard.press(data.key);
+            console.log("Key down: ", data.key);
         }
        
         if(data.inputType === "scroll"){
@@ -77,6 +85,7 @@ wss.on("connection",  async (socket)   =>  {
         }
         if(data.inputType === "keyup"){
             page.keyboard.up(data.key);
+            console.log("Key up: ", data.key);
         }
     };
     socket.on("close", () => {
