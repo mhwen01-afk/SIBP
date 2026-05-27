@@ -12,12 +12,20 @@ const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', 
 
 
 wss.on("connection",  async (socket)   =>  {
+    const messageQueue = [];
+    const bufferMessage = (msg) => messageQueue.push(msg);
+    socket.on("message", bufferMessage);
     console.log("Client connected");
     const session = await createBrowserSession();
     console.log("Browser session created");
     const page = session.page;
     console.log("Page obtained from session");
-    socket.on("message", async (message) => {
+    for (const msg of messageQueue) {
+        await HandleMessage(msg);
+    }
+    socket.on("message", HandleMessage(message)); 
+        
+    async function HandleMessage(message){
         console.log("Message From Client");
         const data = JSON.parse(message);
         if (data.type === "navlink"){
@@ -76,5 +84,5 @@ wss.on("connection",  async (socket)   =>  {
         if(data.inputType === "keyup"){
             page.keyboard.up(data.key);
         }
-    });
+    };
 });
