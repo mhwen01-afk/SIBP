@@ -16,6 +16,7 @@ wss.on("connection",  async (ws)   =>  {
     const page = session.page;
     console.log("Page obtained from session");
     ws.on("message", async (message) => {
+        console.log("Message From Client");
         const data = JSON.parse(message);
         if (data.type === "navlink"){
             console.log("Navigating to link: ", data.link);
