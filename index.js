@@ -133,8 +133,8 @@ wss.on("connection",  async (socket)   =>  {
             socket.send(JSON.stringify({
                 type: "loaded",
                 title: await page.title(),
-                dombody: domTree.body,
-                domhead: domTree.head
+                body: domTree.body,
+                head: domTree.head
             }));
             console.log("DOM tree sent to client");
         }
