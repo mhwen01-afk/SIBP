@@ -29,11 +29,19 @@ wss.on("connection",  async (socket)   =>  {
     const page = session.page;
     console.log("Page obtained from session");
 
+
+    let navTimer = null;
     page.on("framenavigated", async frame => {
+        if (frame !== page.mainFrame()) return;
+
+        clearTimeout(navTimer);
+        navTimer = setTimeout(async()=>{
+
+        
         if (frame === page.mainFrame()) {
             const url = frame.url();
-
-    // Send updated title + DOM after redirect
+        
+            // Send updated title + DOM after redirect
             socket.send(JSON.stringify({
               type: "loadednewpage",
               title: await page.title(),
@@ -99,7 +107,9 @@ wss.on("connection",  async (socket)   =>  {
         body: domTree.body,
         head: domTree.head
     }));
+    
   }
+  },100);
 });
 
     for (const msg of messageQueue) {
