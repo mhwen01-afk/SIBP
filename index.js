@@ -55,7 +55,7 @@ wss.on("connection",  async (socket)   =>  {
     }, 18);
 
     async function HandleMessage(message){
-        console.log("Message From Client. Type: ", message.type.toString());
+        console.log("Message From Client. Type: ", message.type);
         const data = JSON.parse(message);
         if (data.type === "navlink"){
             console.log("Navigating to link: ", data.link);
