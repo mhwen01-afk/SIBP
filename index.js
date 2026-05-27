@@ -17,7 +17,7 @@ wss.on("connection",  async (socket)   =>  {
     const bufferMessage = (msg) => messageQueue.push(msg);
     socket.on("message", bufferMessage);
 
-    
+
     // --------------------------------------------------
     // SET UP BROWSER SESSION
     // --------------------------------------------------
@@ -64,7 +64,8 @@ wss.on("connection",  async (socket)   =>  {
     for (const msg of messageQueue) {
         await HandleMessage(msg);
     }
-    socket.on("message", HandleMessage(message)); 
+    socket.off("message", bufferMessage);
+    socket.on("message", HandleMessage); 
         
     async function HandleMessage(message){
         console.log("Message From Client");
