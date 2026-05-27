@@ -11,13 +11,13 @@ const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', 
 
 
 
-wss.on("connection",  async (ws)   =>  {
+wss.on("connection",  async (socket)   =>  {
     console.log("Client connected");
     const session = await createBrowserSession();
     console.log("Browser session created");
     const page = session.page;
     console.log("Page obtained from session");
-    ws.on("message", async (message) => {
+    socket.on("message", async (message) => {
         console.log("Message From Client");
         const data = JSON.parse(message);
         if (data.type === "navlink"){
@@ -41,7 +41,7 @@ wss.on("connection",  async (ws)   =>  {
                 return serialize(document.body);
             });
             console.log("DOM tree serialized");
-            ws.send(JSON.stringify({
+            socket.send(JSON.stringify({
                 type: "loaded",
                 title: await page.title(),
                 dom: domTree
