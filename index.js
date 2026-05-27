@@ -12,14 +12,17 @@ const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', 
 wss.on("connection",  async (ws)   =>  {
     console.log("Client connected");
     const session = await createBrowserSession();
+    console.log("Browser session created");
     const page = session.page;
+    console.log("Page obtained from session");
     ws.on("message", async (message) => {
         const data = JSON.parse(message);
         if (data.type === "navlink"){
-            let Obj = await getSessionAndPage();
+            console.log("Navigating to link: ", data.link);
             LINK = data.link;
             console.log("Received link:", LINK);
             await page.goto(data.link);
+            console.log("Page loaded");
             const domTree = await page.evaluate(() => {
                 function serialize(node) {
                      return {
@@ -34,11 +37,13 @@ wss.on("connection",  async (ws)   =>  {
 
                 return serialize(document.body);
             });
+            console.log("DOM tree serialized");
             ws.send(JSON.stringify({
                 type: "loaded",
                 title: await page.title(),
                 dom: domTree
             }));
+            console.log("DOM tree sent to client");
         }
         if(data.type === "login"){
             const entercode = data.code;
