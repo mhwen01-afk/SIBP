@@ -41,17 +41,56 @@ wss.on("connection",  async (socket)   =>  {
             }));
 
         const domTree = await page.evaluate(() => {
-            function serialize(node) {
-                return {
-                  tag: node.nodeType === 1 ? node.tagName : null,
-                  attrs: node.nodeType === 1
-                    ? Object.fromEntries([...node.attributes].map(a => [a.name, a.value]))
-                   : {},
-                     text: node.nodeType === 3 ? node.textContent : null,
-                 children: [...node.childNodes].map(serialize)
-                };
+            const BASE = location.origin;
+
+            function toAbsolute(url) {
+                if (!url) return url;
+                try { return new URL(url, BASE).href; }
+                catch { return url; }
             }
-        return serialize(document.body);
+
+            const URL_ATTRS = { src: true, href: true, action: true, srcset: true };
+
+            function serialize(node) {
+                if (node.nodeType === 3) {
+                    return { type: "text", text: node.textContent };
+                }
+                if (node.nodeType !== 1) return null;
+
+                const tag = node.tagName.toLowerCase();
+
+                // Skip script tags — they won't run right on the client anyway
+                if (tag === "script") return null;
+
+                const attrs = {};
+                for (const { name, value } of node.attributes) {
+                    attrs[name] = URL_ATTRS[name] ? toAbsolute(value) : value;
+                }
+
+                // Inline external stylesheets as <style> blocks so CSS actually loads
+                if (tag === "link" && attrs.rel === "stylesheet") {
+                    try {
+                        const sheet = [...document.styleSheets].find(s => s.href === attrs.href);
+                        if (sheet) {
+                            const css = [...sheet.cssRules].map(r => r.cssText).join("\n");
+                            return { type: "element", tag: "style", attrs: {}, children: [
+                                { type: "text", text: css }
+                            ]};
+                        }
+                    } catch {}
+                }
+
+                const children = [...node.childNodes]
+                    .map(serialize)
+                    .filter(Boolean);
+
+                return { type: "element", tag, attrs, children };
+            }
+
+            return {
+                head: serialize(document.head),
+                body: serialize(document.body)
+            };
         });
 
     socket.send(JSON.stringify({
@@ -94,7 +133,8 @@ wss.on("connection",  async (socket)   =>  {
             socket.send(JSON.stringify({
                 type: "loaded",
                 title: await page.title(),
-                dom: domTree
+                dombody: domTree.body,
+                domhead: domTree.head
             }));
             console.log("DOM tree sent to client");
         }
