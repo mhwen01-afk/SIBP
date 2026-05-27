@@ -12,14 +12,55 @@ const userMap = ['a4ae1', 'n2ty2', 'r3et3', 'sl6y4', 't4pe2', '3kya5', '73me6', 
 
 
 wss.on("connection",  async (socket)   =>  {
+    //BUFFER SYSTEM TO AVOID MISSING MESSAGES DURING ASYNC SETUP
     const messageQueue = [];
     const bufferMessage = (msg) => messageQueue.push(msg);
     socket.on("message", bufferMessage);
+
+    
+    // --------------------------------------------------
+    // SET UP BROWSER SESSION
+    // --------------------------------------------------
+
+
     console.log("Client connected");
     const session = await createBrowserSession();
     console.log("Browser session created");
     const page = session.page;
     console.log("Page obtained from session");
+
+    page.on("framenavigated", async frame => {
+        if (frame === page.mainFrame()) {
+            const url = frame.url();
+
+    // Send updated title + DOM after redirect
+            socket.send(JSON.stringify({
+              type: "loaded",
+              title: await page.title(),
+              url: url
+            }));
+
+        const domTree = await page.evaluate(() => {
+            function serialize(node) {
+                return {
+                  tag: node.nodeType === 1 ? node.tagName : null,
+                  attrs: node.nodeType === 1
+                    ? Object.fromEntries([...node.attributes].map(a => [a.name, a.value]))
+                   : {},
+                     text: node.nodeType === 3 ? node.textContent : null,
+                 children: [...node.childNodes].map(serialize)
+                };
+            }
+        return serialize(document.body);
+        });
+
+    socket.send(JSON.stringify({
+      type: "dom-full",
+      tree: domTree
+    }));
+  }
+});
+
     for (const msg of messageQueue) {
         await HandleMessage(msg);
     }
