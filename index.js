@@ -74,7 +74,7 @@ wss.on("connection",  async (socket)   =>  {
             await page.mouse.click(data.x, data.y);
             await page.evaluate(({x,y}) => {
                 const element = document.elementFromPoint(x, y);
-                element.click();
+                if(element) element.focus();
             }, data);
             console.log("Mouse click at: ", data.x, ", ", data.y);
         }
